@@ -36,24 +36,31 @@ window.addEventListener('scroll', updateActiveNav);
 // ============ HAMBURGER MENU ============
 const hamburger = document.querySelector('.hamburger');
 const navLinksMenu = document.querySelector('.nav-links');
+const navbar = document.querySelector('.navbar');
 
+// Hamburger menu toggle
 if (hamburger) {
     hamburger.addEventListener('click', () => {
         hamburger.classList.toggle('active');
-        navLinksMenu.style.display = navLinksMenu.style.display === 'flex' ? 'none' : 'flex';
+        navLinksMenu.classList.toggle('active');
     });
 }
 
+// Close mobile menu on nav link click
 document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
-        if (hamburger) hamburger.classList.remove('active');
-        if (navLinksMenu) navLinksMenu.style.display = 'none';
+        if (window.innerWidth <= 768 && hamburger) {
+            hamburger.classList.remove('active');
+            navLinksMenu.classList.remove('active');
+        }
     });
 });
 
 // ============ GALLERY FUNCTIONALITY ============
 document.addEventListener('DOMContentLoaded', function() {
-    const IMAGES_PER_PAGE = 8;
+    // Responsive images per page: 6 for mobile, 8 for desktop
+    const isMobileView = window.innerWidth <= 768;
+    const IMAGES_PER_PAGE = isMobileView ? 6 : 8;
     let currentFilter = 'all';
     let currentPage = 1;
     let allGalleryItems = [];
@@ -65,10 +72,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     allGalleryItems = Array.from(galleryItems);
     
+    // Update IMAGES_PER_PAGE on window resize
+    window.addEventListener('resize', () => {
+        const newIsMobile = window.innerWidth <= 768;
+        if (newIsMobile !== isMobileView) {
+            currentPage = 1;
+            displayGalleryItems();
+        }
+    });
+    
     // Get all unique categories
     const availableCategories = [...new Set(allGalleryItems.map(item => item.getAttribute('data-category')))];
     
     function displayGalleryItems() {
+        // Recalculate IMAGES_PER_PAGE based on current window size
+        const currentIsMobileView = window.innerWidth <= 768;
+        const currentImagesPerPage = currentIsMobileView ? 6 : 8;
+        
         // Determine which items to show based on filter
         if (currentFilter === 'all') {
             filteredItems = allGalleryItems;
@@ -85,19 +105,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show items for current page
         const startIndex = 0;
-        const endIndex = currentPage * IMAGES_PER_PAGE;
+        const endIndex = currentPage * currentImagesPerPage;
         const itemsToShow = filteredItems.slice(startIndex, endIndex);
         
         itemsToShow.forEach((item, index) => {
             item.classList.add('show');
-            item.style.animationDelay = `${index * 0.1}s`;
+            item.style.animationDelay = `${index * 0.05}s`;
         });
         
         // Remove old buttons
         removeButtons();
         
         // Create appropriate button(s)
-        createButtons();
+        createButtons(currentImagesPerPage);
     }
     
     function removeButtons() {
@@ -107,9 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (existingLessBtn) existingLessBtn.remove();
     }
     
-    function createButtons() {
+    function createButtons(imagesPerPage) {
         const totalItems = filteredItems.length;
-        const displayedItems = currentPage * IMAGES_PER_PAGE;
+        const displayedItems = currentPage * imagesPerPage;
         
         // Create container for buttons if it doesn't exist
         let buttonContainer = document.querySelector('.gallery-button-container');
@@ -131,10 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentPage++;
                 displayGalleryItems();
                 setTimeout(() => {
-                    const newItems = galleryGrid.querySelectorAll('.gallery-item.show');
-                    if (newItems.length > 0) {
-                        newItems[newItems.length - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
+                    galleryGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 100);
             });
             
@@ -152,10 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentPage = 1;
                 displayGalleryItems();
                 setTimeout(() => {
-                    const firstItems = galleryGrid.querySelectorAll('.gallery-item.show');
-                    if (firstItems.length > 0) {
-                        firstItems[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
+                    galleryGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
             });
             
